@@ -1,5 +1,7 @@
+import dayjs from "dayjs";
 import { Request, Response } from "express";
-import { activateCardEmployee, block, createCardEmployee, existCompanyByApiKey, existEmployeeById, existEmployeeCardType, getAllCards, getBalance, unblock } from "../services/cardsService";
+import { activateCardEmployee, block, createCardEmployee, existCardById, existCompanyByApiKey, existEmployeeCardType, getAllCards, getBalance, isAuthorizedCVC, isTodayTheExpirationDate, unblock } from "../services/cardsService";
+import { existEmployeeById } from "../services/employeeService";
 
 export async function createCard(req: Request, res: Response) {
     try {
@@ -9,12 +11,12 @@ export async function createCard(req: Request, res: Response) {
 
         const company = await existCompanyByApiKey(apiKey.toString());
         if(!company){
-            return res.status(404).send("Empresa não cadastrada!")
+            return res.status(401).send("Empresa não cadastrada!")
         }
 
         const employee = await existEmployeeById(Number(employeeId));
         if(!employee){
-            return res.status(404).send("Funcionário não cadastrada!")
+            return res.status(404).send("Funcionário não cadastrado!")
         }
 
         const card = await existEmployeeCardType(Number(employeeId), type);
@@ -32,10 +34,30 @@ export async function createCard(req: Request, res: Response) {
 
 export async function activateCard(req: Request, res: Response) {
     try {
-        const { id } = req.params;
+        const { cardId } = req.params;
         const { cvc, password } = req.body;
 
-        activateCardEmployee(Number(id), cvc, password);
+        const card = await existCardById(Number(cardId));
+        if(!card){
+            return res.status(404).send("Cartão não cadastrado!");
+        }
+
+        const today = dayjs().format('MM/YY');
+        const expired = await isTodayTheExpirationDate(today, card.expirationDate);
+        if(expired){
+            return res.status(401).send("Cartão expirado")
+        }
+
+        if(card.password) {
+            return res.status(401).send("Cartão já ativado!");
+        }
+
+        const authorizedCVC = isAuthorizedCVC(card.securityCode, cvc);
+        if(!authorizedCVC){
+            return res.status(401).send("CVC incorreto!!");
+        }
+
+        await activateCardEmployee(card, password);
 
         res.status(200).send("Cartão ativado com sucesso!");
     } catch (error) {
@@ -58,9 +80,14 @@ export async function getCardByEmployee(req: Request, res: Response) {
 
 export async function getCardBalance(req: Request, res: Response) {
     try {
-        const { id } = req.params;
+        const { cardId } = req.params;
 
-        getBalance(Number(id));
+        const card = await existCardById(Number(cardId));
+        if(!card){
+            return res.status(404).send("Cartão não cadastrado!");
+        }
+
+        getBalance(Number(cardId));
 
         res.status(200).send("Todos os cartões do funcionário!");
     } catch (error) {
