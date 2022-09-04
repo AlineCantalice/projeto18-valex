@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const cardsController_1 = require("../controllers/cardsController");
+const router = (0, express_1.Router)();
+router.post('/card/:employeeId', cardsController_1.createCard);
+router.post('/activate', cardsController_1.activateCard);
+router.get('/card', cardsController_1.getCardByEmployee);
+router.get('/balance', cardsController_1.getCardBalance);
+router.post('/block', cardsController_1.blockCard);
+router.post('/unblock', cardsController_1.unblockCard);
+exports.default = router;

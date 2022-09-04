@@ -3,7 +3,7 @@ import { activateCard, blockCard, createCard, getCardBalance, getCardByEmployee,
 
 const router = Router();
 
-router.post('/card', createCard);
+router.post('/card/:employeeId', createCard);
 router.post('/activate', activateCard);
 router.get('/card', getCardByEmployee);
 router.get('/balance', getCardBalance);
