@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { Request, Response } from "express";
-import { activateCardEmployee, block, createCardEmployee, existCardById, existCompanyByApiKey, existEmployeeCardType, getAllCards, getBalance, isAuthorizedCVC, isTodayTheExpirationDate, unblock } from "../services/cardsService";
+import { activateCardEmployee, block, createCardEmployee, existCardById, existEmployeeCardType, getBalance, isAuthorizedCVC, isTodayTheExpirationDate, unblock, verifyPassword } from "../services/cardsService";
+import { existCompanyByApiKey } from "../services/companyService";
 import { existEmployeeById } from "../services/employeeService";
 
 export async function createCard(req: Request, res: Response) {
@@ -65,19 +66,6 @@ export async function activateCard(req: Request, res: Response) {
     }
 }
 
-export async function getCardByEmployee(req: Request, res: Response) {
-    try {
-        const { id } = req.params;
-        const { cards } = req.body;
-
-        getAllCards(Number(id), cards);
-
-        res.status(200).send("Todos os cartões do funcionário!");
-    } catch (error) {
-        res.status(500).send("Algo deu errado! :(")
-    }
-}
-
 export async function getCardBalance(req: Request, res: Response) {
     try {
         const { cardId } = req.params;
@@ -102,9 +90,29 @@ export async function blockCard(req: Request, res: Response) {
         const { cardId } = req.params;
         const { password } = req.body;
 
-        block(Number(cardId), password);
+        const card = await existCardById(Number(cardId));
+        if(!card){
+            return res.status(404).send("Cartão não cadastrado!");
+        }
 
-        res.status(200).send("Todos os cartões do funcionário!");
+        const today = dayjs().format('MM/YY');
+        const expired = await isTodayTheExpirationDate(today, card.expirationDate);
+        if(expired){
+            return res.status(401).send("Cartão expirado")
+        }
+
+        if(card.isBlocked) {
+            return res.status(401).send("Cartão já bloqueado!");
+        }
+
+        const validPassword = verifyPassword(password, card.password);
+        if(!validPassword){
+            return res.status(401).send("Senha incorreta!");
+        }
+
+        await block(card);
+
+        res.status(200).send("Cartão bloqueado com sucesso!");
     } catch (error) {
         res.status(500).send("Algo deu errado! :(")
     }
@@ -112,11 +120,32 @@ export async function blockCard(req: Request, res: Response) {
 
 export async function unblockCard(req: Request, res: Response) {
     try {
-        const { id } = req.params;
+        const { cardId } = req.params;
         const { password } = req.body;
 
-        unblock(Number(id), password);
+        const card = await existCardById(Number(cardId));
+        if(!card){
+            return res.status(404).send("Cartão não cadastrado!");
+        }
 
+        const today = dayjs().format('MM/YY');
+        const expired = await isTodayTheExpirationDate(today, card.expirationDate);
+        if(expired){
+            return res.status(401).send("Cartão expirado")
+        }
+
+        if(!card.isBlocked) {
+            return res.status(401).send("Cartão já desbloqueado!");
+        }
+
+        const validPassword = verifyPassword(password, card.password);
+        if(!validPassword){
+            return res.status(401).send("Senha incorreta!");
+        }
+
+        await unblock(card);
+
+        res.status(200).send("Cartão desbloqueado com sucesso!");
     } catch (error) {
         res.status(500).send("Algo deu errado! :(")
     }

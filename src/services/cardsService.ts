@@ -42,10 +42,6 @@ export async function activateCardEmployee(card: Card, password: string) {
     await update(card.id, cardData);
 }
 
-export async function getAllCards(employeeId: number, cards: {}[]) {
-    console.log("entrei no service para buscar cartão " + cards[0]['password'])
-}
-
 export async function getBalance(card: Card) {
     const recharges: Recharge[] = await getRechargesByCardId(card.id);
     const transactions: Payment[] = await getPaymentsByCardId(card.id);
@@ -67,20 +63,22 @@ export async function getBalance(card: Card) {
         transactions: transactions,
         recharges: recharges
     }
-    
+
     return balance;
 }
 
-export async function block(cardId: number, password: string) {
-    console.log("entrei no service para bloquear cartão")
+export async function block(card: Card) {
+    const cardData: CardUpdateData = {
+        isBlocked: true
+    }
+    await update(card.id, cardData);
 }
 
-export async function unblock(cardId: number, password: string) {
-    console.log("entrei no service para desbloquear cartão")
-}
-
-export async function existCompanyByApiKey(apiKey: string) {
-    return await findByApiKey(apiKey);
+export async function unblock(card: Card) {
+    const cardData: CardUpdateData = {
+        isBlocked: false
+    }
+    await update(card.id, cardData);
 }
 
 export async function existEmployeeCardType(id: number, type: TransactionTypes) {
@@ -109,6 +107,10 @@ export function isAuthorizedCVC(encryptedCVC: string, cvc: number) {
         return true;
     }
     return false;
+}
+
+export function verifyPassword(password: string, hashPassword: string){
+    return bcrypt.compareSync(password, hashPassword);
 }
 
 function encryptCVC(cvc: string, cryptr: Cryptr) {
