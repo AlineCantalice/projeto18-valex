@@ -7,7 +7,7 @@ router.post('/card/:employeeId', createCard);
 router.post('/activate/:cardId', activateCard);
 //router.get('/card', getCardByEmployee);
 router.get('/balance/:cardId', getCardBalance);
-router.post('/block', blockCard);
-router.post('/unblock', unblockCard);
+router.post('/block/:cardId', blockCard);
+router.post('/unblock/:cardId', unblockCard);
 
 export default router;

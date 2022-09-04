@@ -87,9 +87,11 @@ export async function getCardBalance(req: Request, res: Response) {
             return res.status(404).send("Cartão não cadastrado!");
         }
 
-        getBalance(Number(cardId));
+        const balance = await getBalance(card);
 
-        res.status(200).send("Todos os cartões do funcionário!");
+        const obj = JSON.stringify(balance)
+
+        res.status(200).send(obj);
     } catch (error) {
         res.status(500).send("Algo deu errado! :(")
     }
@@ -97,10 +99,10 @@ export async function getCardBalance(req: Request, res: Response) {
 
 export async function blockCard(req: Request, res: Response) {
     try {
-        const { id } = req.params;
+        const { cardId } = req.params;
         const { password } = req.body;
 
-        block(Number(id), password);
+        block(Number(cardId), password);
 
         res.status(200).send("Todos os cartões do funcionário!");
     } catch (error) {

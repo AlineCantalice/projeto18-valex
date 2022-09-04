@@ -5,6 +5,10 @@ import { faker } from '@faker-js/faker'
 import dayjs from "dayjs"
 import Cryptr from 'cryptr'
 import bcrypt from 'bcrypt'
+import { getRechargesByCardId } from "./rechargeService"
+import { getPaymentsByCardId } from "./paymentService"
+import { Recharge } from "../repositories/rechargeRepository"
+import { Payment } from "../repositories/paymentRepository"
 
 export async function createCardEmployee(employee: Employee, type: TransactionTypes) {
     const cardNumber = faker.finance.creditCardNumber();
@@ -15,14 +19,14 @@ export async function createCardEmployee(employee: Employee, type: TransactionTy
     const encryptedCVC = encryptCVC(cvc, cryptr);
 
     const cardData: CardInsertData = {
-            number: cardNumber,
-            employeeId: employee.id,
-            cardholderName: fullName,
-            securityCode: encryptedCVC,
-            expirationDate: expirationDate,
-            isVirtual: false,
-            isBlocked: true,
-            type: type
+        number: cardNumber,
+        employeeId: employee.id,
+        cardholderName: fullName,
+        securityCode: encryptedCVC,
+        expirationDate: expirationDate,
+        isVirtual: false,
+        isBlocked: true,
+        type: type
     }
 
     await insert(cardData);
@@ -30,7 +34,7 @@ export async function createCardEmployee(employee: Employee, type: TransactionTy
 
 export async function activateCardEmployee(card: Card, password: string) {
     const hashPassword = encryptPassword(password);
-    
+
     const cardData: CardUpdateData = {
         password: hashPassword
     }
@@ -42,8 +46,29 @@ export async function getAllCards(employeeId: number, cards: {}[]) {
     console.log("entrei no service para buscar cartão " + cards[0]['password'])
 }
 
-export async function getBalance(cardId: number) {
-    console.log("entrei no service para buscar extrato do cartão")
+export async function getBalance(card: Card) {
+    const recharges: Recharge[] = await getRechargesByCardId(card.id);
+    const transactions: Payment[] = await getPaymentsByCardId(card.id);
+
+    let sumRecharges: number = 0;
+    
+    recharges.forEach(item => {
+        sumRecharges += item.amount;
+    });
+
+    let sumTransactions: number = 0;
+
+    transactions.forEach(item => {
+        sumTransactions += item.amount;
+    });
+
+    const balance = {
+        balance: sumRecharges - sumTransactions,
+        transactions: transactions,
+        recharges: recharges
+    }
+    
+    return balance;
 }
 
 export async function block(cardId: number, password: string) {
@@ -72,7 +97,7 @@ export async function isTodayTheExpirationDate(today: string, expirationDate: st
     const todayMonth = Number(today.split('/')[0]);
     const todayYear = Number(today.split('/')[1]);
 
-    if(todayYear >= expirationYear && todayMonth >= expirationMonth){
+    if (todayYear >= expirationYear && todayMonth >= expirationMonth) {
         return true;
     }
     return false;
@@ -80,21 +105,21 @@ export async function isTodayTheExpirationDate(today: string, expirationDate: st
 
 export function isAuthorizedCVC(encryptedCVC: string, cvc: number) {
     const cryptr = new Cryptr('myTotallySecretKey');
-    if(Number(decryptCVC(encryptedCVC, cryptr)) === cvc){
+    if (Number(decryptCVC(encryptedCVC, cryptr)) === cvc) {
         return true;
     }
     return false;
 }
 
-function encryptCVC(cvc: string, cryptr: Cryptr){
+function encryptCVC(cvc: string, cryptr: Cryptr) {
     return cryptr.encrypt(cvc);
 }
 
-function decryptCVC(encryptedCVC: string, cryptr: Cryptr){
+function decryptCVC(encryptedCVC: string, cryptr: Cryptr) {
     return cryptr.decrypt(encryptedCVC);
 }
 
-function encryptPassword(password: string){
+function encryptPassword(password: string) {
     return bcrypt.hashSync(password, 10);
 }
 
