@@ -9,6 +9,7 @@ import { getRechargesByCardId } from "./rechargeService"
 import { getPaymentsByCardId } from "./paymentService"
 import { Recharge } from "../repositories/rechargeRepository"
 import { Payment } from "../repositories/paymentRepository"
+import { getCardBalance } from "../controllers/cardsController"
 
 export async function createCardEmployee(employee: Employee, type: TransactionTypes) {
     const cardNumber = faker.finance.creditCardNumber();
@@ -25,7 +26,7 @@ export async function createCardEmployee(employee: Employee, type: TransactionTy
         securityCode: encryptedCVC,
         expirationDate: expirationDate,
         isVirtual: false,
-        isBlocked: true,
+        isBlocked: false,
         type: type
     }
 
@@ -47,7 +48,7 @@ export async function getBalance(card: Card) {
     const transactions: Payment[] = await getPaymentsByCardId(card.id);
 
     let sumRecharges: number = 0;
-    
+
     recharges.forEach(item => {
         sumRecharges += item.amount;
     });
@@ -58,13 +59,9 @@ export async function getBalance(card: Card) {
         sumTransactions += item.amount;
     });
 
-    const balance = {
-        balance: sumRecharges - sumTransactions,
-        transactions: transactions,
-        recharges: recharges
-    }
+    const balance = sumRecharges - sumTransactions;
 
-    return balance;
+    return formatBalance(balance, transactions, recharges);
 }
 
 export async function block(card: Card) {
@@ -103,14 +100,13 @@ export async function isTodayTheExpirationDate(today: string, expirationDate: st
 
 export function isAuthorizedCVC(encryptedCVC: string, cvc: number) {
     const cryptr = new Cryptr('myTotallySecretKey');
-    console.log(decryptCVC(encryptedCVC, cryptr))
     if (Number(decryptCVC(encryptedCVC, cryptr)) === cvc) {
         return true;
     }
     return false;
 }
 
-export function verifyPassword(password: string, hashPassword: string){
+export function verifyPassword(password: string, hashPassword: string) {
     return bcrypt.compareSync(password, hashPassword);
 }
 
@@ -142,4 +138,28 @@ function formatName(fullName: string) {
 
 function generateExpirationDate() {
     return dayjs().add(5, 'year').format('MM/YY');
+}
+
+function formatBalance(balance: number, transactions: Payment[], recharges: Recharge[]) {
+    const formattedRecharges = getFormattedDate(recharges, "timestamp", "DD/MM/YYYY");
+    const formattedTransactions = getFormattedDate(transactions, "timestamp", "DD/MM/YYYY");
+
+    const formattedBalanceData = {
+        balance,
+        transactions: formattedTransactions,
+        recharges: formattedRecharges,
+    }
+    
+    return formattedBalanceData
+}
+
+function getFormattedDate(objectData: object[], key: string, format: string) {
+    const formattedDate = objectData.map(item => {
+        const date = dayjs(item[key])
+        return {
+            ...item,
+            [key]: date.format(format),
+        }
+    })
+    return formattedDate
 }

@@ -79,7 +79,7 @@ function buy(req, res) {
                 return res.status(404).send("Estabelecimento não cadastrado!");
             }
             if (business.type !== card.type) {
-                return res.status(401).send("Cartão não autorizado!");
+                return res.status(401).send("Cartão não autorizado, tipo diferente do estabelecimento!");
             }
             const balance = yield (0, cardsService_1.getBalance)(card);
             if (balance.balance < amount) {

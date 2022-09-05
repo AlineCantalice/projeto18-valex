@@ -8,6 +8,6 @@ import rechargeSchema from "../schemas/transactionSchemas/rechargeSchema";
 const router = Router();
 
 router.post('/recharge/:cardId', apiKeyValidate, validateSchema(rechargeSchema), createRecharge);
-router.post('buy/:cardId', validateSchema(buySchema), buy);
+router.post('/buy/:cardId', validateSchema(buySchema), buy);
 
 export default router;

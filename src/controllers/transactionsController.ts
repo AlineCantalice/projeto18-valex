@@ -76,7 +76,7 @@ export async function buy(req: Request, res: Response) {
         }
 
         if(business.type !== card.type){
-            return res.status(401).send("Cartão não autorizado!");
+            return res.status(401).send("Cartão não autorizado, tipo diferente do estabelecimento!");
         }
 
         const balance = await getBalance(card);

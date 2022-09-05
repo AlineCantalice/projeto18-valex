@@ -11,5 +11,5 @@ const buySchema_1 = __importDefault(require("../schemas/transactionSchemas/buySc
 const rechargeSchema_1 = __importDefault(require("../schemas/transactionSchemas/rechargeSchema"));
 const router = (0, express_1.Router)();
 router.post('/recharge/:cardId', apiKeyValidationMiddleware_1.default, (0, validationMiddleware_1.default)(rechargeSchema_1.default), transactionsController_1.createRecharge);
-router.post('buy/:cardId', (0, validationMiddleware_1.default)(buySchema_1.default), transactionsController_1.buy);
+router.post('/buy/:cardId', (0, validationMiddleware_1.default)(buySchema_1.default), transactionsController_1.buy);
 exports.default = router;

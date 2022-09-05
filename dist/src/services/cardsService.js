@@ -35,7 +35,7 @@ function createCardEmployee(employee, type) {
             securityCode: encryptedCVC,
             expirationDate: expirationDate,
             isVirtual: false,
-            isBlocked: true,
+            isBlocked: false,
             type: type
         };
         yield (0, cardRepository_1.insert)(cardData);
@@ -64,12 +64,8 @@ function getBalance(card) {
         transactions.forEach(item => {
             sumTransactions += item.amount;
         });
-        const balance = {
-            balance: sumRecharges - sumTransactions,
-            transactions: transactions,
-            recharges: recharges
-        };
-        return balance;
+        const balance = sumRecharges - sumTransactions;
+        return formatBalance(balance, transactions, recharges);
     });
 }
 exports.getBalance = getBalance;
@@ -118,7 +114,6 @@ function isTodayTheExpirationDate(today, expirationDate) {
 exports.isTodayTheExpirationDate = isTodayTheExpirationDate;
 function isAuthorizedCVC(encryptedCVC, cvc) {
     const cryptr = new cryptr_1.default('myTotallySecretKey');
-    console.log(decryptCVC(encryptedCVC, cryptr));
     if (Number(decryptCVC(encryptedCVC, cryptr)) === cvc) {
         return true;
     }
@@ -153,4 +148,21 @@ function formatName(fullName) {
 }
 function generateExpirationDate() {
     return (0, dayjs_1.default)().add(5, 'year').format('MM/YY');
+}
+function formatBalance(balance, transactions, recharges) {
+    const formattedRecharges = getFormattedDate(recharges, "timestamp", "DD/MM/YYYY");
+    const formattedTransactions = getFormattedDate(transactions, "timestamp", "DD/MM/YYYY");
+    const formattedBalanceData = {
+        balance,
+        transactions: formattedTransactions,
+        recharges: formattedRecharges,
+    };
+    return formattedBalanceData;
+}
+function getFormattedDate(objectData, key, format) {
+    const formattedDate = objectData.map(item => {
+        const date = (0, dayjs_1.default)(item[key]);
+        return Object.assign(Object.assign({}, item), { [key]: date.format(format) });
+    });
+    return formattedDate;
 }
