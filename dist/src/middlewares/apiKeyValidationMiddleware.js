@@ -9,18 +9,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBusinessById = void 0;
-const businessRepository_1 = require("../repositories/businessRepository");
-function getBusinessById(id) {
+const companyService_1 = require("../services/companyService");
+function apiKeyValidate(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const business = yield (0, businessRepository_1.findById)(id);
-        if (!business) {
+        const apiKey = req.headers['x-api-key'];
+        if (!apiKey.toString()) {
             throw {
-                status: 404,
-                message: "Estabelecimento não encontrado"
+                status: 401,
+                message: "ApiKey não encontrada!"
             };
         }
-        return business;
+        const company = yield (0, companyService_1.existCompanyByApiKey)(apiKey.toString());
+        res.locals.company = company;
+        next();
     });
 }
-exports.getBusinessById = getBusinessById;
+exports.default = apiKeyValidate;

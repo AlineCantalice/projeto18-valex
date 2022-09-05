@@ -13,7 +13,14 @@ exports.existCompanyByApiKey = void 0;
 const companyRepository_1 = require("../repositories/companyRepository");
 function existCompanyByApiKey(apiKey) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield (0, companyRepository_1.findByApiKey)(apiKey);
+        const company = yield (0, companyRepository_1.findByApiKey)(apiKey);
+        if (!company) {
+            throw {
+                status: 404,
+                message: "Empresa não encontrada"
+            };
+        }
+        return company;
     });
 }
 exports.existCompanyByApiKey = existCompanyByApiKey;

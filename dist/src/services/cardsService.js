@@ -118,6 +118,7 @@ function isTodayTheExpirationDate(today, expirationDate) {
 exports.isTodayTheExpirationDate = isTodayTheExpirationDate;
 function isAuthorizedCVC(encryptedCVC, cvc) {
     const cryptr = new cryptr_1.default('myTotallySecretKey');
+    console.log(decryptCVC(encryptedCVC, cryptr));
     if (Number(decryptCVC(encryptedCVC, cryptr)) === cvc) {
         return true;
     }

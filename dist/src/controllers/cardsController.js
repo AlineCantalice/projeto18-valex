@@ -61,7 +61,7 @@ function activateCard(req, res) {
             if (card.password) {
                 return res.status(401).send("Cartão já ativado!");
             }
-            const authorizedCVC = (0, cardsService_1.isAuthorizedCVC)(card.securityCode, cvc);
+            const authorizedCVC = (0, cardsService_1.isAuthorizedCVC)(card.securityCode, Number(cvc));
             if (!authorizedCVC) {
                 return res.status(401).send("CVC incorreto!!");
             }
