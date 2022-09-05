@@ -103,6 +103,7 @@ export async function isTodayTheExpirationDate(today: string, expirationDate: st
 
 export function isAuthorizedCVC(encryptedCVC: string, cvc: number) {
     const cryptr = new Cryptr('myTotallySecretKey');
+    console.log(decryptCVC(encryptedCVC, cryptr))
     if (Number(decryptCVC(encryptedCVC, cryptr)) === cvc) {
         return true;
     }

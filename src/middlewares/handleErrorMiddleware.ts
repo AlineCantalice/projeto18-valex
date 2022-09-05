@@ -1,10 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 
-export default function handleErrorMiddleware (error: any, req: Request, res: Response, next: NextFunction){
-    if (error.type === 'userError') {
-        res.status(error.status).send(error.message)
+interface Error {
+    status?: number;
+    message?: string;
+}
+
+export default function handleErrorMiddleware(error: Error, req: Request, res: Response, next: NextFunction) {
+    console.log(error)
+    if (error) {
+        res.status(error.status).send(error.message);
     }
-    else{
-        res.sendStatus(500)
-    }
+    res.sendStatus(500);
 }

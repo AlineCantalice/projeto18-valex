@@ -52,8 +52,8 @@ export async function activateCard(req: Request, res: Response) {
         if(card.password) {
             return res.status(401).send("Cartão já ativado!");
         }
-
-        const authorizedCVC = isAuthorizedCVC(card.securityCode, cvc);
+        
+        const authorizedCVC = isAuthorizedCVC(card.securityCode, Number(cvc));
         if(!authorizedCVC){
             return res.status(401).send("CVC incorreto!!");
         }
