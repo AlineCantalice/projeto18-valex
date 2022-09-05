@@ -8,7 +8,7 @@ import cardSchema from "../schemas/cardSchemas/cardSchema";
 
 const router = Router();
 
-router.post('/card/:employeeId', validateSchema(cardSchema), createCard);
+router.post('/card/:employeeId', apiKeyValidate, validateSchema(cardSchema), createCard);
 router.post('/activate/:cardId', validateSchema(activateSchema), activateCard);
 router.get('/balance/:cardId', getCardBalance);
 router.post('/block/:cardId', validateSchema(blockUnblockSchema), blockCard);
